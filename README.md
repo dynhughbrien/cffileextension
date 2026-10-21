@@ -4,7 +4,7 @@ A customizable example showing how to build a **Dynatrace Extension Framework 2.
 
 ## What it does
 
-For each configured file path the extension reports four metrics every polling cycle:
+For each configured file path the extension reports these metrics every polling cycle:
 
 | Metric key | Description |
 |---|---|
@@ -12,8 +12,11 @@ For each configured file path the extension reports four metrics every polling c
 | `custom.file.size_bytes` | File size in bytes |
 | `custom.file.age_seconds` | Seconds since the file was last modified |
 | `custom.file.line_count` | Line count (only when `count_lines: true`) |
+| `custom.file.change_age_seconds` | Seconds since the file's metadata last changed (ctime; creation time on Windows) |
+| `custom.file.mode` | Numeric permission bits (e.g. `420` = `0o644`) |
+| `custom.file.owner_uid` | Numeric user ID of the file owner (Unix only) |
 
-Metrics are split by the `file_path` dimension so you can monitor multiple files from a single extension activation. A built-in topology type (`custom:file-monitor`) creates entities per file, and a dashboard is bundled with the extension.
+Metrics are split by the `file_path` dimension (existing files also carry `file_owner`, `file_group`, `file_mountpoint` and `file_mode_octal`) so you can monitor multiple files from a single extension activation. A built-in topology type (`custom:file-monitor`) creates entities per file, and a dashboard is bundled with the extension.
 
 ---
 
@@ -29,7 +32,7 @@ Metrics are split by the `file_path` dimension so you can monitor multiple files
 Install the Python SDK and development tools:
 
 ```bash
-pip install dynatrace-extension-sdk dt-extensions-sdk
+pip install dt-extensions-sdk pyyaml
 ```
 
 ---
@@ -60,25 +63,28 @@ cffileextension/
 ```bash
 python -m venv .venv
 source .venv/bin/activate      # Windows: .venv\Scripts\activate
-pip install -e .
+pip install -e ".[dev]"
 ```
 
 ### 2. Run the extension locally
 
 ```bash
-python -m file_monitor --activationConfig activation_config.json --fastDevelopmentMode
+python -m file_monitor --activationconfig activation_config.json
 ```
 
-`--fastDevelopmentMode` shortens the polling interval so you can see metrics quickly without waiting the default 60 s. Metrics are printed to stdout; in production they are sent to the OneAgent.
+Run it from the repo root: in local mode the SDK reads `extension/extension.yaml` relative to the working directory. Metrics are buffered and printed to stdout about once a minute, so let it run for at least 60 s before expecting output. In production they are sent to the OneAgent.
 
 Edit `activation_config.json` to point at real files on your machine:
 
 ```json
 {
-  "endpoints": [
-    { "file_path": "C:\\Windows\\System32\\drivers\\etc\\hosts", "count_lines": true },
-    { "file_path": "C:\\Temp\\my-export.csv", "count_lines": false }
-  ]
+  "enabled": true,
+  "pythonLocal": {
+    "endpoints": [
+      { "file_path": "C:\\Windows\\System32\\drivers\\etc\\hosts", "count_lines": true },
+      { "file_path": "C:\\Temp\\my-export.csv", "count_lines": false }
+    ]
+  }
 }
 ```
 

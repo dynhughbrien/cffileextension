@@ -45,6 +45,13 @@ metrics:
       description: >
         Numeric permission bits of the file (e.g. 420 = 0o644 = rw-r--r--).
         Alert on unexpected changes to detect permission drift.
+  - key: custom.file.owner_uid
+    metadata:
+      displayName: File Owner UID
+      unit: Count
+      description: >
+        Numeric user ID of the file owner (Unix only; not reported on Windows).
+        The owner name is available in the file_owner dimension. Alert on changes to detect ownership drift.
 
 topology:
   types:
@@ -135,6 +142,9 @@ screens:
           - displayName: File Mode (numeric)
             metrics:
               - metricSelector: "custom.file.mode:splitBy(\"file_path\",\"file_mode_octal\")"
+          - displayName: File Owner UID
+            metrics:
+              - metricSelector: "custom.file.owner_uid:splitBy(\"file_path\",\"file_owner\")"
 
 dashboards:
   - path: "dashboards/overview.json"

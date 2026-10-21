@@ -9,6 +9,10 @@ setup(
     package_dir={"": "src"},
     python_requires=">=3.8",
     install_requires=[
-        "dynatrace-extension-sdk>=1.0.0",
+        "dt-extensions-sdk>=1.0.0",
     ],
+    extras_require={
+        # Needed only for local dev mode, where the SDK parses extension/extension.yaml
+        "dev": ["pyyaml"],
+    },
 )

@@ -54,8 +54,7 @@ class FileMonitorExtension(Extension):
         endpoints = self.activation_config.get("endpoints", [])
 
         if not endpoints:
-            self.report_status(Status(StatusValue.EMPTY_PAYLOAD, "No file endpoints configured"))
-            return
+            return Status(StatusValue.WARNING, "No file endpoints configured")
 
         for endpoint in endpoints:
             file_path = endpoint.get("file_path", "").strip()
@@ -112,6 +111,11 @@ class FileMonitorExtension(Extension):
 
         # File mode as raw integer — useful for detecting unexpected permission changes
         self.report_metric("custom.file.mode", stat_module.S_IMODE(st.st_mode), dimensions=dims)
+
+        # Owner UID as raw integer — alert on ownership drift; name is in the file_owner dimension.
+        # Skipped on Windows where st_uid is always 0.
+        if sys.platform != "win32":
+            self.report_metric("custom.file.owner_uid", st.st_uid, dimensions=dims)
 
         if count_lines:
             try:
